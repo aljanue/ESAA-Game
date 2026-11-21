@@ -70,3 +70,19 @@ body.noui #sys{display:none}
 .sb::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);right:0;background:#f3ead2;color:#3b2a1b;border:1px solid #5a4a30;border-radius:5px;padding:4px 9px;font:600 13px Arial,sans-serif;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s}
 .sb:hover::after{opacity:1}
 #contBtn{display:none;margin-top:14px}
+@media (max-width:768px){
+  .screen{padding:14px}
+  .sex{flex-wrap:wrap}
+  .inv{height:60px;padding:0 10px;gap:8px;overflow-x:auto}
+  .inv .lab{font-size:10px;letter-spacing:.08em}
+  .slots{gap:8px}
+  .slot{width:44px;height:44px}
+  .itm{height:48px}
+  .ico{width:clamp(30px,7vw,40px);height:clamp(30px,7vw,40px)}
+  .dlg{font-size:clamp(13px,3.2vw,17px);line-height:1.35;padding:10px 12px}
+  .dlg b{font-size:clamp(11px,2.8vw,14px);margin-bottom:4px}
+  .dlg .ln{height:auto;white-space:normal}
+  .lbl{font-size:clamp(9px,2.2vw,13px)}
+  #sys{top:10px;bottom:auto;right:10px}
+  .sb{width:34px;height:34px}
+}
