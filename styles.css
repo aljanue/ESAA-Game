@@ -86,3 +86,11 @@ body.noui #sys{display:none}
   #sys{top:10px;bottom:auto;right:10px}
   .sb{width:34px;height:34px}
 }
+#rotateHint{display:none;position:fixed;inset:0;z-index:100;background:#000d;backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px;text-align:center}
+#rotateHint.dismissed{display:none!important}
+.rh-box{max-width:340px;background:#161616;border:1px solid #555;border-radius:14px;padding:28px 22px;color:#f2eee4;box-shadow:0 12px 40px #000}
+.rh-ico{width:64px;height:64px;margin:0 auto 14px;display:block;color:#f0dcae;animation:rotatePhone 2.2s ease-in-out infinite}
+.rh-box p{margin:0 0 20px;font-size:16px;line-height:1.5;color:#d8d4ca}
+@keyframes rotatePhone{0%,20%{transform:rotate(0deg)}50%,75%{transform:rotate(-90deg)}100%{transform:rotate(0deg)}}
+@keyframes fadeOutHint{to{opacity:0;visibility:hidden;pointer-events:none}}
+@media (max-width:768px) and (orientation:portrait){#rotateHint{display:flex;animation:fadeOutHint .6s ease 3.5s forwards}}
