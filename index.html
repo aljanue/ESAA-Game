@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El enigma de Ajuez · Versión 0.14</title>
+<link rel="stylesheet" href="styles.css"></head><body>
+<section id="s1" class="screen on"><h1>EL ENIGMA DE AJUEZ</h1><p class="t">Bienvenido/a a este videojuego de aventura e investigación. Explora la Estación de Seguimiento Ambiental de Ajuez, habla con sus personajes, examina pistas y utiliza tus conocimientos científicos para descubrir qué está ocurriendo.</p><button class="btn" onclick="go('s2')">COMENZAR</button><button id="contBtn" class="btn" onclick="loadLocal()">CONTINUAR PARTIDA</button></section>
+<section id="s2" class="screen"><h2>Primero, ¿eres chico o chica?</h2>
+<div class="sex"><button id="bChico" onclick="pick('chico')">Chico</button><button id="bChica" onclick="pick('chica')">Chica</button></div>
+<div class="namebox"><label for="nm">¿Cómo te llamas?</label><input id="nm" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off" oninput="chk()"></div>
+<button id="cont" class="btn" disabled onclick="newGame()">CONTINUAR</button></section>
+<section id="comic" class="screen"><div class="cstage" onclick="skipType(event)"><img id="cimg" alt="Introducción en cómic"><div id="ctext"></div>
+<div class="cov c2" id="cv2"></div><div class="cov c3" id="cv3"></div><div class="cov c4" id="cv4"></div><div class="cov c5" id="cv5"></div>
+<div class="ntag" id="tagP"></div><div class="ntag" id="tagJ">Julián</div>
+<button id="comicGo" class="btn" onclick="go('s4')">CONTINUAR</button></div></section>
+<section id="s4" class="screen"><p class="t" style="font-size:clamp(20px,3vw,32px)">El profesor Julián me dijo que nos veríamos a la hora de comer, que me instalara en el cuarto.</p><button class="btn" onclick="showRoom()">CONTINUAR</button></section>
+<section id="room" class="screen"><div class="wrap" style="--r:1671/941"><div class="stage"><img id="roomImg" alt="Habitación del protagonista">
+<div class="loc"><svg viewBox="0 0 24 24" fill="#111"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg><span id="locTxt"></span></div>
+<button class="ico" style="left:4.6%;top:64%" title="Examinar" onclick="bag()"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M15 15l6 6"/></svg></button>
+<button class="ico" style="left:17%;top:28%" title="Examinar" onclick="msg('Todo alrededor era naturaleza. ¡Era una pasada de sitio!')"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M15 15l6 6"/></svg></button>
+<button class="ico" id="roomDoor" style="left:80.5%;top:45%;display:none" title="Salir" onclick="showMap()"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linejoin="round"><path d="M6 21V4h10v17"/><path d="M3 21h18"/><circle cx="13.2" cy="13" r=".9" fill="#111"/></svg></button>
+</div><div class="inv"><span class="lab">INVENTARIO</span><span class="slots"></span></div></div></section>
+<section id="map" class="screen"><div class="wrap" style="--r:1535/1024;--hb:0px"><div class="stage"><img id="mapImg" alt="Plano de la ESAA"><div id="mapLabels"></div><div id="mapIcons"></div></div></div></section>
+<section id="phone" class="screen" onclick="go(PREV)" style="cursor:pointer"><p class="t" style="font-size:clamp(22px,3.4vw,36px);margin:0;color:#fff">¿A quién quieres llamar?</p></section>
+<section id="test" class="screen"><div class="pc"><div class="bar">ESAA · Evaluación inicial</div><div class="scr" id="tscr"></div></div></section>
+<section id="roomBlack" class="screen" onclick="showMap()" style="cursor:pointer"><h1 id="rbTitle"></h1></section>
+<div id="sys"><button class="sb" data-tip="Guardar partida" onclick="saveLocal()"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4 3h13l3 3v15H4V3zm3 1v5h9V4H7zm0 10v7h10v-7H7z"/></svg></button><button class="sb" data-tip="Exportar partida" onclick="exportGame()"><svg viewBox="0 0 24 24"><path d="M12 2l5 5h-3.5v8h-3V7H7l5-5zM4 14h3v5h10v-5h3v8H4z"/></svg></button><button class="sb" data-tip="Importar partida" onclick="$('file').click()"><svg viewBox="0 0 24 24"><path d="M10.5 2h3v8H17l-5 5-5-5h3.5V2zM4 14h3v5h10v-5h3v8H4z"/></svg></button></div>
+<input type="file" id="file" accept=".json,application/json" style="display:none" onchange="importGame(this)">
+<div id="msg" onclick="this.classList.remove('on')"><div id="msgT"></div></div>
+<script src="app.js" defer></script></body></html>
