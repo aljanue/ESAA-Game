@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>El enigma de Ajuez · Panel del Profesor</title>
+  <style>
+    :root {
+      --bg: #0b1612;
+      --card: #11221c;
+      --border: rgba(110, 231, 183, 0.2);
+      --text: #ecfdf5;
+      --muted: #a7f3d0;
+      --accent: #34d399;
+      --danger: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    h1 { font-size: 1.5rem; color: var(--accent); }
+    .login-box {
+      max-width: 380px;
+      margin: 60px auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .login-box h2 { margin-bottom: 16px; font-size: 1.25rem; }
+    label { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,0.3);
+      color: var(--text);
+      margin-bottom: 14px;
+      font-size: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: #052e1f;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    button.sec {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .err { color: var(--danger); font-size: 0.9rem; margin-top: 10px; }
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    th { color: var(--muted); font-weight: 600; background: rgba(0,0,0,0.2); }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Panel del Profesor · El enigma de Ajuez</h1>
+      <div id="hdrActions" style="display:none; gap:10px;">
+        <button onclick="cargarPartidas()">Actualizar</button>
+        <button class="sec" onclick="cerrarSesion()">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <section id="loginView" class="login-box">
+      <h2>Iniciar sesión</h2>
+      <form onsubmit="iniciarSesion(event)">
+        <label for="email">Correo del profesor</label>
+        <input id="email" type="email" required placeholder="tu@correo.com">
+        <label for="pass">Contraseña</label>
+        <input id="pass" type="password" required>
+        <button type="submit" style="width:100%">Entrar</button>
+        <p id="loginErr" class="err"></p>
+      </form>
+    </section>
+
+    <section id="panelView" style="display:none;">
+      <p id="resumen" style="margin-bottom:14px; color:var(--muted);"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Pantalla actual</th>
+              <th>Zonas descubiertas</th>
+              <th>Test inicial</th>
+              <th>Última actualización</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPA_URL = 'https://fvqyzlogbqbfjnzzbrwj.supabase.co';
+    const SUPA_KEY = 'sb_publishable_S9EOtgX8zMrHsm9Iw5X0tA_UIrRe8ga';
+    const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    const PANTALLAS = {
+      intro: 'Introducción (Cómic)',
+      room: 'Habitación',
+      map: 'Mapa de la ESAA',
+      cocina: 'Cocina',
+      comun: 'Sala común',
+      lab: 'Laboratorio',
+      test: 'Evaluación inicial'
+    };
+
+    async function comprobarSesion() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user && !session.user.is_anonymous) {
+        mostrarPanel();
+      } else {
+        document.getElementById('loginView').style.display = 'block';
+        document.getElementById('panelView').style.display = 'none';
+        document.getElementById('hdrActions').style.display = 'none';
+      }
+    }
+
+    async function iniciarSesion(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('loginErr');
+      errEl.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('pass').value;
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = 'Error: ' + error.message;
+        return;
+      }
+      mostrarPanel();
+    }
+
+    async function cerrarSesion() {
+      await sb.auth.signOut();
+      comprobarSesion();
+    }
+
+    async function mostrarPanel() {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('panelView').style.display = 'block';
+      document.getElementById('hdrActions').style.display = 'flex';
+      cargarPartidas();
+    }
+
+    async function cargarPartidas() {
+      const tbody = document.getElementById('tbody');
+      tbody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
+      const { data, error } = await sb
+        .from('partidas')
+        .select('nombre, estado, updated_at')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Error al cargar: ${error.message}</td></tr>`;
+        return;
+      }
+
+      document.getElementById('resumen').textContent = `Total de alumnos registrados: ${data.length}`;
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5">Todavía no hay partidas guardadas.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(row => {
+        const st = row.estado || {};
+        const scr = PANTALLAS[st.scr] || st.scr || '-';
+        const disc = Array.isArray(st.disc) ? st.disc.join(', ') : '-';
+        const testCount = st.test ? Object.keys(st.test).length : 0;
+        const fecha = row.updated_at ? new Date(row.updated_at).toLocaleString('es-ES') : '-';
+        return `
+          <tr>
+            <td><strong>${row.nombre || 'Sin nombre'}</strong></td>
+            <td><span class="pill">${scr}</span></td>
+            <td>${disc}</td>
+            <td>${testCount} preguntas respondidas</td>
+            <td>${fecha}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    comprobarSesion();
+  </script>
+</body>
+</html>

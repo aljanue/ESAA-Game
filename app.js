@@ -224,10 +224,54 @@ function restore(o){
  S={sex:o.sex,name:o.name.trim().slice(0,20),phone:o.phone===true||o.phoneRead===true,phoneRead:o.phoneRead===true,disc:[...d],pres:o.pres===true,labIntro:o.labIntro===true,test:cleanTest(o.test),maletin:o.maletin===true,items:o.maletin===true?['barra','alicates']:[]};if(S.pres)S.disc.push('lab');
  if(o.scr==='room')showRoom();else if(o.scr==='map')showMap();else if(o.scr==='cocina'||o.scr==='comun'||o.scr==='lab')showScene(o.scr);else if(o.scr==='test')showTest();else beginComic();return true}
 function noGame(){if(!S.name){msg('Todavía no hay ninguna partida que guardar.');return true}return false}
-function saveLocal(){if(noGame())return;try{localStorage.setItem(KEY,JSON.stringify(snap()));msg('Partida guardada en este navegador.')}catch(e){msg('No se ha podido guardar en este navegador. Puedes exportar la partida.')}}
-function loadLocal(){try{if(!restore(JSON.parse(localStorage.getItem(KEY))))msg('La partida guardada no es válida.')}catch(e){msg('No se ha podido cargar la partida guardada.')}}
+const SUPA_URL='https://fvqyzlogbqbfjnzzbrwj.supabase.co';
+const SUPA_KEY='sb_publishable_S9EOtgX8zMrHsm9Iw5X0tA_UIrRe8ga';
+const sb=window.supabase?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+let sbUid=null;
+async function initAuth(){
+ if(!sb)return null;
+ try{
+  const{data:{session}}=await sb.auth.getSession();
+  if(session?.user){sbUid=session.user.id;return sbUid}
+  const{data,error}=await sb.auth.signInAnonymously();
+  if(!error&&data?.user)sbUid=data.user.id;
+ }catch(e){}
+ return sbUid;
+}
+async function saveCloud(silent=false){
+ if(noGame()||!sb)return false;
+ const uid=sbUid||await initAuth();
+ if(!uid)return false;
+ try{
+  const{error}=await sb.from('partidas').upsert({
+   user_id:uid,
+   nombre:S.name,
+   estado:snap(),
+   updated_at:new Date().toISOString()
+  },{onConflict:'user_id'});
+  if(!error&&!silent)msg('Partida guardada en la nube y en este navegador.');
+  return !error;
+ }catch(e){return false}
+}
+async function loadCloud(){
+ if(!sb)return null;
+ const uid=sbUid||await initAuth();
+ if(!uid)return null;
+ try{
+  const{data,error}=await sb.from('partidas').select('estado').eq('user_id',uid).maybeSingle();
+  if(!error&&data?.estado)return data.estado;
+ }catch(e){}
+ return null;
+}
+function saveLocal(){if(noGame())return;let okLocal=false;try{localStorage.setItem(KEY,JSON.stringify(snap()));okLocal=true}catch(e){}saveCloud(false).then(okCloud=>{if(!okCloud&&okLocal)msg('Partida guardada en este navegador.');else if(!okCloud&&!okLocal)msg('No se ha podido guardar. Puedes exportar la partida.')})}
+async function loadLocal(){
+ const cloud=await loadCloud();
+ if(cloud&&restore(cloud))return;
+ try{if(!restore(JSON.parse(localStorage.getItem(KEY))))msg('La partida guardada no es válida.')}catch(e){msg('No se ha podido cargar la partida guardada.')}
+}
 function exportGame(){if(noGame())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(snap())],{type:'application/json'}));
  a.download='ESAA_partida_'+S.name.replace(/[^\w\-]+/g,'_')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);msg('Partida exportada: se ha descargado el archivo.')}
 function importGame(inp){const f=inp.files[0];inp.value='';if(!f)return;const r=new FileReader();
- r.onload=()=>{let ok=false;try{ok=restore(JSON.parse(r.result))}catch(e){}if(ok)msg('Partida importada.');else msg('El archivo no es una partida válida.')};r.readAsText(f)}
+ r.onload=()=>{let ok=false;try{ok=restore(JSON.parse(r.result))}catch(e){}if(ok){saveCloud(true);msg('Partida importada.')}else msg('El archivo no es una partida válida.')};r.readAsText(f)}
 try{if(localStorage.getItem(KEY))$('contBtn').style.display='inline-block'}catch(e){}
+initAuth().then(async uid=>{if(uid&&await loadCloud())$('contBtn').style.display='inline-block'});
