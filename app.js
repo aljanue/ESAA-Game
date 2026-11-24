@@ -15,11 +15,11 @@ const _preloaded=new Set();
 function preloadImgs(urls){urls.forEach(u=>{if(!u||_preloaded.has(u))return;_preloaded.add(u);const i=new Image();i.src=u;});}
 function msg(t){$('msgT').textContent=t;$('msg').classList.add('on')}
 function pick(x){pickSex=x;$('bChico').classList.toggle('sel',x=='chico');$('bChica').classList.toggle('sel',x=='chica');chk()}
-function chk(){$('cont').disabled=!(pickSex&&$('nm').value.trim())}
+function chk(){$('cont').disabled=!(pickSex&&$('nm').value.trim()&&$('pin')&&$('pin').value.trim().length>=3)}
 const EYE='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></svg>';
 function eyeOn(n){const c=$('cv'+n);const b=document.createElement('button');b.className='eye';b.title='Revelar viñeta';b.innerHTML=EYE;b.onclick=()=>reveal(n);c.appendChild(b);c.style.pointerEvents='auto'}
 function reveal(n){const c=$('cv'+n);c.innerHTML='';c.classList.add('rev');c.style.pointerEvents='none';typePanel(n,()=>{if(n<5)eyeOn(n+1);else $('comicGo').style.display='block'})}
-function newGame(){S=newState();S.name=$('nm').value.trim();beginComic()}
+function newGame(){S=newState();S.name=$('nm').value.trim();S.code=$('pin').value.trim();saveCloud(true);beginComic()}
 function beginComic(){clearInterval(TM);TM=null;TDONE=null;$('cimg').src=IMG[S.sex];$('tagP').textContent=S.name;preloadImgs([IMG.room,IMG.i_movil]);
  for(let n=2;n<=5;n++){const c=$('cv'+n);c.innerHTML='';c.classList.remove('rev');c.style.pointerEvents='none'}
  $('comicGo').style.display='none';buildTexts();go('comic');fitTexts();typePanel(1,()=>eyeOn(2))}
@@ -217,11 +217,11 @@ function makePDF(T){const L=50,TW=495,pages=[];let c=[],y=0;const fecha=new Date
  return Uint8Array.from(out,ch=>ch.charCodeAt(0)&255)}
 function dlPDF(){const T=S.test,a=document.createElement('a');a.href=URL.createObjectURL(new Blob([makePDF(T)],{type:'application/pdf'}));a.download='ESAA_test_'+T.nombre.trim().replace(/[^\wÀ-ÿ]+/g,'_')+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000);T.dl=true;renderTest()}
 // ---- Guardado ----
-const snap=()=>({v:1,sex:S.sex,name:S.name,phone:S.phone,phoneRead:S.phoneRead,disc:S.disc,pres:S.pres,maletin:S.maletin,items:S.items,labIntro:S.labIntro,test:S.test,scr:(x=>x==='room'?'room':(x==='map'||x==='roomBlack')?'map':x==='sc_cocina'?'cocina':x==='sc_comun'?'comun':x==='sc_lab'?'lab':x==='test'?'test':'intro')(cur==='phone'?PREV:cur)});
+const snap=()=>({v:1,sex:S.sex,name:S.name,code:S.code||'',phone:S.phone,phoneRead:S.phoneRead,disc:S.disc,pres:S.pres,maletin:S.maletin,items:S.items,labIntro:S.labIntro,test:S.test,scr:(x=>x==='room'?'room':(x==='map'||x==='roomBlack')?'map':x==='sc_cocina'?'cocina':x==='sc_comun'?'comun':x==='sc_lab'?'lab':x==='test'?'test':'intro')(cur==='phone'?PREV:cur)});
 function restore(o){
  if(!o||o.v!==1||!['chico','chica'].includes(o.sex)||typeof o.name!=='string'||!o.name.trim())return false;
  const d=new Set(INIT_DISC);if(Array.isArray(o.disc))o.disc.forEach(x=>{if(typeof x==='string'&&LBL[x])d.add(x)});
- S={sex:o.sex,name:o.name.trim().slice(0,20),phone:o.phone===true||o.phoneRead===true,phoneRead:o.phoneRead===true,disc:[...d],pres:o.pres===true,labIntro:o.labIntro===true,test:cleanTest(o.test),maletin:o.maletin===true,items:o.maletin===true?['barra','alicates']:[]};if(S.pres)S.disc.push('lab');
+ S={sex:o.sex,name:o.name.trim().slice(0,20),code:typeof o.code==='string'?o.code:'',phone:o.phone===true||o.phoneRead===true,phoneRead:o.phoneRead===true,disc:[...d],pres:o.pres===true,labIntro:o.labIntro===true,test:cleanTest(o.test),maletin:o.maletin===true,items:o.maletin===true?['barra','alicates']:[]};if(S.pres)S.disc.push('lab');
  if(o.scr==='room')showRoom();else if(o.scr==='map')showMap();else if(o.scr==='cocina'||o.scr==='comun'||o.scr==='lab')showScene(o.scr);else if(o.scr==='test')showTest();else beginComic();return true}
 function noGame(){if(!S.name){msg('Todavía no hay ninguna partida que guardar.');return true}return false}
 const SUPA_URL='https://fvqyzlogbqbfjnzzbrwj.supabase.co';
@@ -246,6 +246,7 @@ async function saveCloud(silent=false){
   const{error}=await sb.from('partidas').upsert({
    user_id:uid,
    nombre:S.name,
+   codigo:S.code||'',
    estado:snap(),
    updated_at:new Date().toISOString()
   },{onConflict:'user_id'});
@@ -273,5 +274,22 @@ function exportGame(){if(noGame())return;const a=document.createElement('a');a.h
  a.download='ESAA_partida_'+S.name.replace(/[^\w\-]+/g,'_')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);msg('Partida exportada: se ha descargado el archivo.')}
 function importGame(inp){const f=inp.files[0];inp.value='';if(!f)return;const r=new FileReader();
  r.onload=()=>{let ok=false;try{ok=restore(JSON.parse(r.result))}catch(e){}if(ok){saveCloud(true);msg('Partida importada.')}else msg('El archivo no es una partida válida.')};r.readAsText(f)}
+async function recoverByCode(){
+ if(!sb){msg('No hay conexión con la nube.');return}
+ const nombre=prompt('Escribe tu nombre (seudónimo) exacto:');
+ if(!nombre||!nombre.trim())return;
+ const codigo=prompt('Escribe tu código secreto:');
+ if(!codigo||!codigo.trim())return;
+ const uid=sbUid||await initAuth();
+ if(!uid){msg('No se pudo iniciar sesión en la nube.');return}
+ try{
+  const{data,error}=await sb.rpc('recuperar_partida',{p_nombre:nombre.trim(),p_codigo:codigo.trim()});
+  if(error||!data){msg('No se encontró ninguna partida con ese nombre y código.');return}
+  if(restore(data)){
+   try{localStorage.setItem(KEY,JSON.stringify(snap()))}catch(e){}
+   msg('¡Partida recuperada!');
+  }else{msg('La partida recuperada no es válida.')}
+ }catch(e){msg('Error al intentar recuperar la partida.')}
+}
 try{if(localStorage.getItem(KEY))$('contBtn').style.display='inline-block'}catch(e){}
 initAuth().then(async uid=>{if(uid&&await loadCloud())$('contBtn').style.display='inline-block'});

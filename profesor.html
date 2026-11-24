@@ -118,6 +118,7 @@
           <thead>
             <tr>
               <th>Alumno</th>
+              <th>Código</th>
               <th>Pantalla actual</th>
               <th>Zonas descubiertas</th>
               <th>Test inicial</th>
@@ -188,7 +189,7 @@
       tbody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
       const { data, error } = await sb
         .from('partidas')
-        .select('nombre, estado, updated_at')
+        .select('nombre, codigo, estado, updated_at')
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -211,6 +212,7 @@
         return `
           <tr>
             <td><strong>${row.nombre || 'Sin nombre'}</strong></td>
+            <td><code>${row.codigo || '-'}</code></td>
             <td><span class="pill">${scr}</span></td>
             <td>${disc}</td>
             <td>${testCount} preguntas respondidas</td>

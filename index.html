@@ -2,10 +2,11 @@
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>El enigma de Ajuez · Versión 0.14</title>
 <link rel="stylesheet" href="styles.css"></head><body>
-<section id="s1" class="screen on"><h1>EL ENIGMA DE AJUEZ</h1><p class="t">Bienvenido/a a este videojuego de aventura e investigación. Explora la Estación de Seguimiento Ambiental de Ajuez, habla con sus personajes, examina pistas y utiliza tus conocimientos científicos para descubrir qué está ocurriendo.</p><button class="btn" onclick="go('s2')">COMENZAR</button><button id="contBtn" class="btn" onclick="loadLocal()">CONTINUAR PARTIDA</button></section>
+<section id="s1" class="screen on"><h1>EL ENIGMA DE AJUEZ</h1><p class="t">Bienvenido/a a este videojuego de aventura e investigación. Explora la Estación de Seguimiento Ambiental de Ajuez, habla con sus personajes, examina pistas y utiliza tus conocimientos científicos para descubrir qué está ocurriendo.</p><button class="btn" onclick="go('s2')">COMENZAR</button><button id="contBtn" class="btn" onclick="loadLocal()">CONTINUAR PARTIDA</button><button class="btn" onclick="recoverByCode()">RECUPERAR CON CÓDIGO</button></section>
 <section id="s2" class="screen"><h2>Primero, ¿eres chico o chica?</h2>
 <div class="sex"><button id="bChico" onclick="pick('chico')">Chico</button><button id="bChica" onclick="pick('chica')">Chica</button></div>
-<div class="namebox"><label for="nm">¿Cómo te llamas?</label><input id="nm" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off" oninput="chk()"></div>
+<div class="namebox"><label for="nm">¿Cómo te llamas? (Seudónimo)</label><input id="nm" type="text" maxlength="20" placeholder="Escribe tu nombre" autocomplete="off" oninput="chk()"></div>
+<div class="namebox"><label for="pin">Elige un código secreto (para recuperar tu partida en otro dispositivo)</label><input id="pin" type="text" maxlength="20" placeholder="Ej: 1234 o tu clave" autocomplete="off" oninput="chk()"></div>
 <button id="cont" class="btn" disabled onclick="newGame()">CONTINUAR</button></section>
 <section id="comic" class="screen"><div class="cstage" onclick="skipType(event)"><img id="cimg" alt="Introducción en cómic"><div id="ctext"></div>
 <div class="cov c2" id="cv2"></div><div class="cov c3" id="cv3"></div><div class="cov c4" id="cv4"></div><div class="cov c5" id="cv5"></div>
